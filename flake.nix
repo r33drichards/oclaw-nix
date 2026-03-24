@@ -112,7 +112,7 @@
             mkdir -p /var/lib/openclaw/state
           '';
           ExecStart = "${openclaw}/bin/openclaw gateway --port 18789";
-          Restart = "on-failure";
+          Restart = "always";
           RestartSec = "10s";
           StateDirectory = "openclaw";
         };
