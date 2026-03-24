@@ -59,6 +59,8 @@
     nixosModules.default = { pkgs, lib, ... }: {
       imports = [ comin.nixosModules.comin ];
 
+      services.dbus.enable = true;
+
       # GitOps: Comin polls this repo and applies nixosConfigurations.<hostname>
       services.comin = {
         enable = true;
