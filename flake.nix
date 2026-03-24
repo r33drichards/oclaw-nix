@@ -14,13 +14,10 @@
   let
     system = "aarch64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    # Pull openclaw from unstable — nixos-25.05 predates the aarch64-linux build
-    # permittedInsecurePackages required because nixpkgs flags prompt-injection risk
-    unstable = import nixpkgs-unstable {
-      inherit system;
-      config.permittedInsecurePackages = [ "openclaw-2026.3.12" ];
-    };
-    openclaw = unstable.openclaw;
+    # Build tools that postdate nixos-25.05: rolldown, pnpm_10, fetchPnpmDeps
+    unstable = nixpkgs-unstable.legacyPackages.${system};
+    # Vendored package with sandbox fixes (see pkgs/openclaw/default.nix)
+    openclaw = unstable.callPackage ./pkgs/openclaw {};
   in {
     # Full system config — comin inside slot1 switches to this
     nixosConfigurations.slot1 = nixpkgs.lib.nixosSystem {
@@ -50,8 +47,6 @@
           ];
 
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
-          # VM provides isolation — disable build sandbox so pnpm can reach the registry
-          nix.settings.sandbox = false;
           system.stateVersion = "24.05";
 
           # Microvm boot — no traditional bootloader, root on virtio disk
