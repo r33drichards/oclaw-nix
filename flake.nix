@@ -66,6 +66,7 @@
           name = "origin";
           url = "https://github.com/r33drichards/oclaw-nix.git";
           branches.main.name = "main";
+          branches.main.fetchInterval = 15;
         }];
       };
 
