@@ -101,9 +101,7 @@
         environment = {
           OPENCLAW_STATE_DIR = "/var/lib/openclaw/state";
           HOME = "/var/lib/openclaw";
-          # Point OpenClaw at LiteLLM on the hypervisor bridge gateway
-          OPENAI_API_BASE = "http://10.1.0.1:4000";
-          OPENAI_API_KEY = "dummy";
+          LITELLM_API_KEY = "dummy";
         };
         serviceConfig = {
           User = "openclaw";
