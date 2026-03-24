@@ -50,6 +50,8 @@
           ];
 
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
+          # VM provides isolation — disable build sandbox so pnpm can reach the registry
+          nix.settings.sandbox = false;
           system.stateVersion = "24.05";
 
           # Microvm boot — no traditional bootloader, root on virtio disk
