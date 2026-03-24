@@ -3,16 +3,24 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     comin = {
       url = "github:nlewo/comin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, comin }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, comin }:
   let
     system = "aarch64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
+    # Pull openclaw from unstable — nixos-25.05 predates the aarch64-linux build
+    # permittedInsecurePackages required because nixpkgs flags prompt-injection risk
+    unstable = import nixpkgs-unstable {
+      inherit system;
+      config.permittedInsecurePackages = [ "openclaw-2026.3.12" ];
+    };
+    openclaw = unstable.openclaw;
   in {
     # Full system config — comin inside slot1 switches to this
     nixosConfigurations.slot1 = nixpkgs.lib.nixosSystem {
@@ -79,8 +87,7 @@
         openFirewall = false;
       };
 
-      # OpenClaw gateway — installed via npm on first start, then kept up to date
-      # nix-openclaw doesn't support aarch64-linux so we use npm directly
+      # OpenClaw gateway — built from source via nixpkgs-unstable (supports aarch64-linux)
       users.users.openclaw = {
         isSystemUser = true;
         group = "openclaw";
@@ -96,23 +103,17 @@
         environment = {
           OPENCLAW_STATE_DIR = "/var/lib/openclaw/state";
           HOME = "/var/lib/openclaw";
-          npm_config_prefix = "/var/lib/openclaw/.npm-global";
           # Point OpenClaw at LiteLLM on the hypervisor bridge gateway
           OPENAI_API_BASE = "http://10.1.0.1:4000";
           OPENAI_API_KEY = "dummy";
         };
-        path = [ pkgs.nodejs pkgs.bash pkgs.coreutils ];
         serviceConfig = {
           User = "openclaw";
           WorkingDirectory = "/var/lib/openclaw";
-          # Install/update openclaw on every start, then run gateway
-          ExecStartPre = pkgs.writeScript "openclaw-install" ''
-            #!${pkgs.bash}/bin/bash
-            set -e
-            mkdir -p /var/lib/openclaw/state /var/lib/openclaw/.npm-global
-            ${pkgs.nodejs}/bin/npm install -g openclaw@latest --prefix /var/lib/openclaw/.npm-global
+          ExecStartPre = pkgs.writeShellScript "openclaw-init" ''
+            mkdir -p /var/lib/openclaw/state
           '';
-          ExecStart = "/var/lib/openclaw/.npm-global/bin/openclaw gateway --port 18789";
+          ExecStart = "${openclaw}/bin/openclaw gateway --port 18789";
           Restart = "on-failure";
           RestartSec = "10s";
           StateDirectory = "openclaw";
@@ -123,8 +124,8 @@
         chromium
         git
         nodejs
+        openclaw
       ];
     };
   };
 }
-
