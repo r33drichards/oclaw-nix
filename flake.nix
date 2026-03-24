@@ -9,7 +9,48 @@
     };
   };
 
-  outputs = { self, nixpkgs, comin }: {
+  outputs = { self, nixpkgs, comin }:
+  let
+    system = "aarch64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+  in {
+    # Full system config — comin inside slot1 switches to this
+    nixosConfigurations.slot1 = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        self.nixosModules.default
+        ({ ... }: {
+          # Slot1 network identity
+          networking.hostName = "slot1";
+          networking.useNetworkd = true;
+          systemd.network.enable = true;
+          systemd.network.networks."10-lan" = {
+            matchConfig.Type = "ether";
+            networkConfig = {
+              Address = "10.1.0.2/24";
+              Gateway = "10.1.0.1";
+              DNS = "10.1.0.1";
+            };
+          };
+
+          # SSH access
+          services.openssh.enable = true;
+          users.users.root.openssh.authorizedKeys.keys = [
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHJNEMM9i3WgPeA5dDmU7KMWTCcwLLi4EWfX8CKXuK7s robertwendt@Roberts-Laptop.local"
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINlI6KJHGNUzVJV/OpBQPrcXQkYylvhoM3XvWJI1/tiZ"
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII4mlN4JTkdx3C7iBmMF5HporlQygDE2tjN77IE0Ezxn root@hypervisor"
+          ];
+
+          nix.settings.experimental-features = [ "nix-command" "flakes" ];
+          system.stateVersion = "24.05";
+
+          # Microvm boot — no traditional bootloader, root on virtio disk
+          boot.loader.grub.enable = false;
+          fileSystems."/" = { device = "/dev/vdb"; fsType = "ext4"; };
+        })
+      ];
+    };
+
     nixosModules.default = { pkgs, lib, ... }: {
       imports = [ comin.nixosModules.comin ];
 
@@ -86,3 +127,4 @@
     };
   };
 }
+
