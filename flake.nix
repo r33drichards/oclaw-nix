@@ -91,6 +91,7 @@
         group = "openclaw";
         home = "/var/lib/openclaw";
         createHome = true;
+        shell = pkgs.bash;
       };
       users.groups.openclaw = {};
 
