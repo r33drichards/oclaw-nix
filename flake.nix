@@ -78,6 +78,9 @@
         settings = {
           server = {
             hosts = [ "0.0.0.0:5232" "[::]:5232" ];
+            ssl = true;
+            certificate = "/etc/radicale/ssl/cert.pem";
+            key = "/etc/radicale/ssl/key.pem";
           };
           auth = {
             type = "htpasswd";
@@ -107,11 +110,37 @@
         };
       };
 
-      # Create htpasswd file for Radicale declaratively
+      # Create htpasswd file and SSL certs for Radicale declaratively
       systemd.tmpfiles.rules = [
         "d /etc/radicale 0700 radicale radicale -"
+        "d /etc/radicale/ssl 0700 radicale radicale -"
         ''f /etc/radicale/users 0600 radicale radicale - robert:$2b$05$U9EZirGuUeqDq9Uq3uLOn.spaOSU11G3h9PY4VVCMA.ugmPirpGHi''
       ];
+
+      # Generate self-signed TLS cert for Radicale if missing
+      systemd.services.radicale-cert = {
+        description = "Generate Radicale self-signed TLS certificate";
+        before = [ "radicale.service" ];
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
+        path = [ pkgs.openssl ];
+        script = ''
+          if [ ! -f /etc/radicale/ssl/cert.pem ]; then
+            openssl req -x509 -newkey rsa:2048 \
+              -keyout /etc/radicale/ssl/key.pem \
+              -out /etc/radicale/ssl/cert.pem \
+              -days 3650 -nodes \
+              -subj "/CN=10.1.0.2" \
+              -addext "subjectAltName=IP:10.1.0.2"
+            chown radicale:radicale /etc/radicale/ssl/key.pem /etc/radicale/ssl/cert.pem
+            chmod 600 /etc/radicale/ssl/key.pem
+            chmod 644 /etc/radicale/ssl/cert.pem
+          fi
+        '';
+      };
 
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
       networking.firewall.allowedTCPPorts = [ 5232 ];
@@ -174,6 +203,7 @@
         chromium
         git
         nodejs
+        openssl
         openclaw
       ];
     };
