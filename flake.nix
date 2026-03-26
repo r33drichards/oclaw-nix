@@ -138,7 +138,14 @@
         home = "/var/lib/openclaw";
         createHome = true;
         shell = pkgs.bash;
+        extraGroups = [ "wheel" ];
       };
+
+      # Passwordless sudo for openclaw
+      security.sudo.extraRules = [{
+        users = [ "openclaw" ];
+        commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
+      }];
       users.groups.openclaw = {};
 
       systemd.services.openclaw-gateway = {
