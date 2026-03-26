@@ -107,10 +107,10 @@
         };
       };
 
-      # Create htpasswd file for Radicale — password set manually via:
-      #   echo "robert:$(mkpasswd -m bcrypt <password>)" > /etc/radicale/users
+      # Create htpasswd file for Radicale declaratively
       systemd.tmpfiles.rules = [
         "d /etc/radicale 0700 radicale radicale -"
+        ''f /etc/radicale/users 0600 radicale radicale - robert:$2b$05$U9EZirGuUeqDq9Uq3uLOn.spaOSU11G3h9PY4VVCMA.ugmPirpGHi''
       ];
 
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
