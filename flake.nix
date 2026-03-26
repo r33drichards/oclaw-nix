@@ -72,6 +72,50 @@
         }];
       };
 
+      # Radicale CalDAV/CardDAV server
+      services.radicale = {
+        enable = true;
+        settings = {
+          server = {
+            hosts = [ "0.0.0.0:5232" "[::]:5232" ];
+          };
+          auth = {
+            type = "htpasswd";
+            htpasswd_filename = "/etc/radicale/users";
+            htpasswd_encryption = "bcrypt";
+          };
+          storage = {
+            filesystem_folder = "/var/lib/radicale/collections";
+          };
+        };
+        rights = {
+          root = {
+            user = ".+";
+            collection = "";
+            permissions = "R";
+          };
+          principal = {
+            user = ".+";
+            collection = "{user}";
+            permissions = "RW";
+          };
+          calendars = {
+            user = ".+";
+            collection = "{user}/[^/]+";
+            permissions = "rw";
+          };
+        };
+      };
+
+      # Create htpasswd file for Radicale — password set manually via:
+      #   echo "robert:$(mkpasswd -m bcrypt <password>)" > /etc/radicale/users
+      systemd.tmpfiles.rules = [
+        "d /etc/radicale 0700 radicale radicale -"
+      ];
+
+      # Open Radicale port on LAN (only reachable via Tailscale/local network)
+      networking.firewall.allowedTCPPorts = [ 5232 ];
+
       # XFCE desktop
       services.xserver = {
         enable = true;
