@@ -114,7 +114,7 @@
       systemd.tmpfiles.rules = [
         "d /etc/radicale 0700 radicale radicale -"
         "d /etc/radicale/ssl 0700 radicale radicale -"
-        ''f /etc/radicale/users 0600 radicale radicale - robert:$2b$05$U9EZirGuUeqDq9Uq3uLOn.spaOSU11G3h9PY4VVCMA.ugmPirpGHi''
+        ''f /etc/radicale/users 0600 radicale radicale - robert:$2b$05$NLnP8RRR.e13vS4xzinTdeKtoc7XNlWOq3liopxOcSkEvCVGzJtG.''
       ];
 
       # Generate self-signed TLS cert for Radicale if missing
