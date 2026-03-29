@@ -6,8 +6,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://repo1.maven.org/maven2/org/opentripplanner/otp-shaded/${version}/otp-shaded-${version}.jar";
-    # TODO: verify this hash after first build — nix will tell you the correct one
-    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    sha256 = "sha256-jd1zbbaIRsXUB5fWKmp23eXZ5gdvI7cRMR+4xbAIJ0k=";
   };
 
   dontUnpack = true;

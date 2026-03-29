@@ -123,20 +123,14 @@ in
 
       serviceConfig = {
         Type = "simple";
-        DynamicUser = true;
-        StateDirectory = "graphhopper";
+        User = "openclaw";
         WorkingDirectory = cfg.dataDir;
+        ExecStartPre = pkgs.writeShellScript "graphhopper-init" ''
+          mkdir -p ${cfg.dataDir}/graph-cache
+        '';
         ExecStart = "${pkgs.jre_headless}/bin/java ${cfg.jvmOpts} -jar ${graphhopperPkg}/share/graphhopper/graphhopper-web-11.0.jar server ${configFile}";
         Restart = "on-failure";
         RestartSec = "10s";
-
-        # Hardening
-        NoNewPrivileges = true;
-        ProtectSystem = "strict";
-        ProtectHome = true;
-        ReadWritePaths = [ cfg.dataDir ];
-        ReadOnlyPaths = [ (builtins.dirOf cfg.osmFile) ];
-        PrivateTmp = true;
       };
     };
   };
