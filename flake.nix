@@ -18,6 +18,7 @@
     unstable = nixpkgs-unstable.legacyPackages.${system};
     # Vendored package with sandbox fixes (see pkgs/openclaw/default.nix)
     openclaw = unstable.callPackage ./pkgs/openclaw {};
+    graphhopper = pkgs.callPackage ./pkgs/graphhopper {};
   in {
     # Full system config — comin inside slot1 switches to this
     nixosConfigurations.slot1 = nixpkgs.lib.nixosSystem {
@@ -57,7 +58,10 @@
     };
 
     nixosModules.default = { pkgs, lib, ... }: {
-      imports = [ comin.nixosModules.comin ];
+      imports = [
+        comin.nixosModules.comin
+        ./pkgs/graphhopper/module.nix
+      ];
 
       services.dbus.enable = true;
 
@@ -140,6 +144,19 @@
             chmod 644 /etc/radicale/ssl/cert.pem
           fi
         '';
+      };
+
+      # GraphHopper routing engine — California OSM data
+      services.graphhopper = {
+        enable = true;
+        osmFile = "/var/lib/graphhopper/california-latest.osm.pbf";
+        dataDir = "/var/lib/graphhopper";
+        port = 8989;
+        profiles = [ "car" "foot" "bike" ];
+        chProfiles = [ "car" ];
+        dataAccess = "MMAP";
+        jvmOpts = "-Xmx2g -Xms1g";
+        openFirewall = true;
       };
 
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
