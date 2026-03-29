@@ -17,7 +17,8 @@
     # Build tools that postdate nixos-25.05: rolldown, pnpm_10, fetchPnpmDeps
     unstable = nixpkgs-unstable.legacyPackages.${system};
     # Vendored package with sandbox fixes (see pkgs/openclaw/default.nix)
-    openclaw = unstable.callPackage ./pkgs/openclaw {};
+    openclaw-base = unstable.callPackage ./pkgs/openclaw {};
+    openclaw = pkgs.callPackage ./pkgs/openclaw-plugins { openclaw = openclaw-base; };
     graphhopper = pkgs.callPackage ./pkgs/graphhopper {};
   in {
     # Full system config — comin inside slot1 switches to this

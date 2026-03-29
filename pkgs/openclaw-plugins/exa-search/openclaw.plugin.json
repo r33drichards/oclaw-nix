@@ -1,0 +1,15 @@
+{
+  "id": "exa-search",
+  "name": "Exa Search",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": { "type": "string" }
+    }
+  },
+  "uiHints": {
+    "apiKey": { "label": "Exa API Key", "sensitive": true }
+  }
+}
