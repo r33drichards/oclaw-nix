@@ -23,6 +23,8 @@ let
         foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
         bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating, ferry_speed
 
+      import.osm.ignored_highways: ""
+
       graph.elevation.provider: srtm
 
       prepare.min_network_size: 200
