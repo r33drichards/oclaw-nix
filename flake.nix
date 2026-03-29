@@ -8,9 +8,13 @@
       url = "github:nlewo/comin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, comin }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, comin, sops-nix }:
   let
     system = "aarch64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
@@ -61,6 +65,7 @@
     nixosModules.default = { pkgs, lib, ... }: {
       imports = [
         comin.nixosModules.comin
+        sops-nix.nixosModules.sops
         ./pkgs/graphhopper/module.nix
       ];
 
@@ -75,6 +80,17 @@
           branches.main.name = "main";
           poller.period = 15;
         }];
+      };
+
+      # sops-nix secret management
+      sops = {
+        defaultSopsFile = ./secrets/secrets.yaml;
+        age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+        secrets = {
+          "exa_api_key" = {
+            owner = "openclaw";
+          };
+        };
       };
 
       # Radicale CalDAV/CardDAV server
@@ -197,7 +213,7 @@
 
       systemd.services.openclaw-gateway = {
         description = "OpenClaw gateway";
-        after = [ "network.target" ];
+        after = [ "network.target" "sops-nix.service" ];
         wantedBy = [ "multi-user.target" ];
         environment = {
           OPENCLAW_STATE_DIR = "/var/lib/openclaw/state";
@@ -210,7 +226,15 @@
           ExecStartPre = pkgs.writeShellScript "openclaw-init" ''
             mkdir -p /var/lib/openclaw/state
           '';
-          ExecStart = "${openclaw}/bin/openclaw gateway --port 18789";
+          ExecStart = pkgs.writeShellScript "openclaw-start" ''
+            export OPENCLAW_STATE_DIR="/var/lib/openclaw/state"
+            export HOME="/var/lib/openclaw"
+            export LITELLM_API_KEY="dummy"
+            if [ -f /run/secrets/exa_api_key ]; then
+              export EXA_API_KEY="$(cat /run/secrets/exa_api_key)"
+            fi
+            exec ${openclaw}/bin/openclaw gateway --port 18789
+          '';
           Restart = "always";
           RestartSec = "10s";
           StateDirectory = "openclaw";
@@ -218,10 +242,13 @@
       };
 
       environment.systemPackages = with pkgs; [
+        age
         chromium
         git
         nodejs
         openssl
+        sops
+        ssh-to-age
         openclaw
       ];
     };

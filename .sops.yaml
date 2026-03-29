@@ -1,0 +1,11 @@
+keys:
+  # Admin key (Robot on slot1)
+  - &admin age1ua0ypfmmu297750tqa7xn4gucj3pc6460j77ckah8lnuldj6my8sdq5zgr
+  # slot1 machine key (derived from SSH host ed25519 key)
+  - &slot1 age1ulsvwgdnqc4a3fhn6xtj426c8pd7de62s9dn40s2hjq028mdfg3qlqqmdv
+creation_rules:
+  - path_regex: secrets/.*\.(yaml|json|env)$
+    key_groups:
+    - age:
+      - *admin
+      - *slot1
