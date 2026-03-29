@@ -24,6 +24,7 @@
     openclaw-base = unstable.callPackage ./pkgs/openclaw {};
     openclaw = pkgs.callPackage ./pkgs/openclaw-plugins { openclaw = openclaw-base; };
     graphhopper = pkgs.callPackage ./pkgs/graphhopper {};
+    otp = pkgs.callPackage ./pkgs/otp {};
   in {
     # Full system config — comin inside slot1 switches to this
     nixosConfigurations.slot1 = nixpkgs.lib.nixosSystem {
@@ -67,6 +68,7 @@
         comin.nixosModules.comin
         sops-nix.nixosModules.sops
         ./pkgs/graphhopper/module.nix
+        ./pkgs/otp/module.nix
       ];
 
       services.dbus.enable = true;
@@ -176,6 +178,15 @@
         openFirewall = true;
       };
 
+      # OpenTripPlanner — multimodal transit routing (Bay Area)
+      services.opentripplanner = {
+        enable = true;
+        dataDir = "/var/lib/otp";
+        port = 8080;
+        jvmOpts = "-Xmx4g -Xms2g";
+        openFirewall = true;
+      };
+
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
       networking.firewall.allowedTCPPorts = [ 5232 ];
 
@@ -247,6 +258,8 @@
         git
         nodejs
         openssl
+        otp
+        (python3.withPackages (ps: [ ps.ortools ]))
         sops
         ssh-to-age
         openclaw

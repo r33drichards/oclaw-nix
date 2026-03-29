@@ -1,0 +1,12 @@
+{
+  "id": "itinerary-planner",
+  "name": "Itinerary Planner",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "otpUrl": { "type": "string", "default": "http://localhost:8080" }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "osm": [{
+    "source": "california.osm.pbf"
+  }],
+  "transitFeeds": [
+    {"type": "gtfs", "source": "bart.gtfs.zip"},
+    {"type": "gtfs", "source": "sfmta.gtfs.zip"},
+    {"type": "gtfs", "source": "caltrain.gtfs.zip"},
+    {"type": "gtfs", "source": "actransit.gtfs.zip"}
+  ]
+}

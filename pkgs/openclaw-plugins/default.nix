@@ -7,6 +7,7 @@ let
   # Each subdirectory here is a plugin (must contain openclaw.plugin.json + index.ts)
   pluginDirs = {
     exa-search = ./exa-search;
+    itinerary-planner = ./itinerary-planner;
   };
 in
 symlinkJoin {
