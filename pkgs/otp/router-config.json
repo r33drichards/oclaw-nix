@@ -9,5 +9,42 @@
   "transit": {
     "maxNumberOfTransfers": 4
   },
-  "updaters": []
+  "updaters": [
+    {
+      "type": "real-time-alerts",
+      "frequency": "30s",
+      "url": "https://api.511.org/transit/servicealerts?api_key=${TRANSIT_511_API_KEY}&agency=SF",
+      "feedId": "sfmta"
+    },
+    {
+      "type": "stop-time-updater",
+      "frequency": "30s",
+      "url": "https://api.511.org/transit/tripupdates?api_key=${TRANSIT_511_API_KEY}&agency=SF",
+      "feedId": "sfmta"
+    },
+    {
+      "type": "stop-time-updater",
+      "frequency": "30s",
+      "url": "https://api.511.org/transit/tripupdates?api_key=${TRANSIT_511_API_KEY}&agency=BA",
+      "feedId": "bart"
+    },
+    {
+      "type": "real-time-alerts",
+      "frequency": "30s",
+      "url": "https://api.511.org/transit/servicealerts?api_key=${TRANSIT_511_API_KEY}&agency=BA",
+      "feedId": "bart"
+    },
+    {
+      "type": "stop-time-updater",
+      "frequency": "60s",
+      "url": "https://api.511.org/transit/tripupdates?api_key=${TRANSIT_511_API_KEY}&agency=CT",
+      "feedId": "caltrain"
+    },
+    {
+      "type": "stop-time-updater",
+      "frequency": "60s",
+      "url": "https://api.511.org/transit/tripupdates?api_key=${TRANSIT_511_API_KEY}&agency=AC",
+      "feedId": "actransit"
+    }
+  ]
 }

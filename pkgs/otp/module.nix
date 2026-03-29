@@ -89,7 +89,7 @@ in
     # Long-running service that loads the graph and serves the API
     systemd.services.opentripplanner = {
       description = "OpenTripPlanner Trip Planning Server";
-      after = [ "network.target" "opentripplanner-build.service" ];
+      after = [ "network.target" "opentripplanner-build.service" "sops-nix.service" ];
       wants = [ "opentripplanner-build.service" ];
       wantedBy = [ "multi-user.target" ];
 
@@ -98,6 +98,16 @@ in
         DynamicUser = true;
         StateDirectory = "otp";
         WorkingDirectory = cfg.dataDir;
+
+        # Template 511 API key into router-config.json before starting
+        ExecStartPre = pkgs.writeShellScript "otp-config" ''
+          if [ -f /run/secrets/transit_511_api_key ]; then
+            API_KEY=$(cat /run/secrets/transit_511_api_key)
+            if [ -f "${cfg.dataDir}/router-config.json" ]; then
+              ${pkgs.gnused}/bin/sed -i "s/\''${TRANSIT_511_API_KEY}/$API_KEY/g" ${cfg.dataDir}/router-config.json
+            fi
+          fi
+        '';
 
         ExecStart = ''
           ${pkgs.jre_headless}/bin/java ${cfg.jvmOpts} \

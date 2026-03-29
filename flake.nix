@@ -92,6 +92,9 @@
           "exa_api_key" = {
             owner = "openclaw";
           };
+          "transit_511_api_key" = {
+            owner = "openclaw";
+          };
         };
       };
 
