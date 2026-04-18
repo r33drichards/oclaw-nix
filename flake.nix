@@ -179,8 +179,11 @@
       };
 
       # GraphHopper routing engine — California OSM data
+      # TEMPORARILY DISABLED: graph-cache/properties corrupted after an
+      # interrupted restart, crash-looping blocked sshd/openclaw. Re-enable
+      # after wiping /var/lib/graphhopper/graph-cache on slot1.
       services.graphhopper = {
-        enable = true;
+        enable = false;
         osmFile = "/var/lib/graphhopper/california-latest.osm.pbf";
         dataDir = "/var/lib/graphhopper";
         port = 8989;
@@ -192,8 +195,10 @@
       };
 
       # OpenTripPlanner — multimodal transit routing (Bay Area)
+      # TEMPORARILY DISABLED: graph-builder has been failing for a while;
+      # probably same corrupted-cache class of issue. Re-enable after cleanup.
       services.opentripplanner = {
-        enable = true;
+        enable = false;
         dataDir = "/var/lib/otp";
         port = 8080;
         jvmOpts = "-Xmx4g -Xms2g";
