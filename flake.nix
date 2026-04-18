@@ -75,6 +75,14 @@
 
       services.dbus.enable = true;
 
+      # DEBUG: forward all journal entries to serial console so we can
+      # diagnose boot wedges via the hypervisor's microvm@slot1 journal.
+      services.journald.extraConfig = ''
+        ForwardToConsole=yes
+        TTYPath=/dev/ttyAMA0
+        MaxLevelConsole=info
+      '';
+
       # GitOps: Comin polls this repo and applies nixosConfigurations.<hostname>
       services.comin = {
         enable = true;
