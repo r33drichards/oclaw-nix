@@ -190,6 +190,29 @@
         openFirewall = true;
       };
 
+      # Tailscale VPN
+      services.tailscale.enable = true;
+
+      # Authenticate Tailscale on first boot (ephemeral key, one-shot)
+      systemd.services.tailscale-autoconnect = {
+        description = "Tailscale auto-connect";
+        after = [ "network-online.target" "tailscale.service" ];
+        wants = [ "network-online.target" "tailscale.service" ];
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
+        script = ''
+          # Already authenticated? Skip.
+          if ${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' > /dev/null 2>&1; then
+            echo "Tailscale already connected."
+            exit 0
+          fi
+          ${pkgs.tailscale}/bin/tailscale up --authkey=tskey-auth-k2iXejFLYH11CNTRL-BWigbjueg3jcQTcGgh114jNiRauJHgrCY --accept-routes
+        '';
+      };
+
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
       networking.firewall.allowedTCPPorts = [ 5232 ];
 
