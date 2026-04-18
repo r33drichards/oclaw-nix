@@ -69,6 +69,7 @@
         sops-nix.nixosModules.sops
         ./pkgs/graphhopper/module.nix
         ./pkgs/otp/module.nix
+        ./modules/slot-telemetry.nix
       ];
 
       services.dbus.enable = true;
