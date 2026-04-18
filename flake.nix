@@ -45,8 +45,12 @@
             };
           };
 
-          # SSH access
-          services.openssh.enable = true;
+          # SSH access. UseDNS off so inbound reverse-DNS lookups don't hang
+          # when Tailscale or upstream DNS is unhealthy.
+          services.openssh = {
+            enable = true;
+            settings.UseDNS = false;
+          };
           users.users.root.openssh.authorizedKeys.keys = [
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHJNEMM9i3WgPeA5dDmU7KMWTCcwLLi4EWfX8CKXuK7s robertwendt@Roberts-Laptop.local"
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINlI6KJHGNUzVJV/OpBQPrcXQkYylvhoM3XvWJI1/tiZ"
@@ -209,6 +213,11 @@
       services.tailscale.enable = true;
 
       # Authenticate Tailscale on first boot (ephemeral key, one-shot)
+      # IMPORTANT: --accept-dns=false because the hypervisor's nginx SNI filter
+      # blocks dns.nextdns.io (Tailscale's default DoH upstream), which would
+      # otherwise break ALL DNS resolution in the guest (openclaw can't reach
+      # web.whatsapp.com, comin can't reach github, and sshd hangs on reverse
+      # lookups making it look like slot1 is wedged).
       systemd.services.tailscale-autoconnect = {
         description = "Tailscale auto-connect";
         after = [ "network-online.target" "tailscale.service" ];
@@ -219,12 +228,13 @@
           RemainAfterExit = true;
         };
         script = ''
-          # Already authenticated? Skip.
           if ${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' > /dev/null 2>&1; then
             echo "Tailscale already connected."
-            exit 0
+          else
+            ${pkgs.tailscale}/bin/tailscale up --authkey=tskey-auth-k2iXejFLYH11CNTRL-BWigbjueg3jcQTcGgh114jNiRauJHgrCY --accept-routes --accept-dns=false
           fi
-          ${pkgs.tailscale}/bin/tailscale up --authkey=tskey-auth-k2iXejFLYH11CNTRL-BWigbjueg3jcQTcGgh114jNiRauJHgrCY --accept-routes
+          # Force DNS off even if tailscale was previously started with DNS on.
+          ${pkgs.tailscale}/bin/tailscale set --accept-dns=false || true
         '';
       };
 
