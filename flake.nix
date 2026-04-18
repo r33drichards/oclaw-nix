@@ -209,34 +209,13 @@
         openFirewall = true;
       };
 
-      # Tailscale VPN
-      services.tailscale.enable = true;
+      # Tailscale VPN — DISABLED: it was hijacking DNS to dns.nextdns.io
+      # (blocked by hypervisor SNI filter), breaking all name resolution in
+      # the guest. Access to slot1 still works via the hypervisor's own
+      # Tailscale subnet routing (10.1.0.0/24 is advertised).
+      services.tailscale.enable = false;
 
-      # Authenticate Tailscale on first boot (ephemeral key, one-shot)
-      # IMPORTANT: --accept-dns=false because the hypervisor's nginx SNI filter
-      # blocks dns.nextdns.io (Tailscale's default DoH upstream), which would
-      # otherwise break ALL DNS resolution in the guest (openclaw can't reach
-      # web.whatsapp.com, comin can't reach github, and sshd hangs on reverse
-      # lookups making it look like slot1 is wedged).
-      systemd.services.tailscale-autoconnect = {
-        description = "Tailscale auto-connect";
-        after = [ "network-online.target" "tailscale.service" ];
-        wants = [ "network-online.target" "tailscale.service" ];
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-        };
-        script = ''
-          if ${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' > /dev/null 2>&1; then
-            echo "Tailscale already connected."
-          else
-            ${pkgs.tailscale}/bin/tailscale up --authkey=tskey-auth-k2iXejFLYH11CNTRL-BWigbjueg3jcQTcGgh114jNiRauJHgrCY --accept-routes --accept-dns=false
-          fi
-          # Force DNS off even if tailscale was previously started with DNS on.
-          ${pkgs.tailscale}/bin/tailscale set --accept-dns=false || true
-        '';
-      };
+      # Tailscale-autoconnect disabled while tailscale is off (see above).
 
       # Open Radicale port on LAN (only reachable via Tailscale/local network)
       networking.firewall.allowedTCPPorts = [ 5232 ];
